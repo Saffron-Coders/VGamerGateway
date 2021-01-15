@@ -10,7 +10,8 @@ PCSTR NetworkInputManager::NET_IN_DISCOVER_PORT = "15010";
 int NetworkInputManager::m_RecvLen = 512;
 
 NetworkInputManager::NetworkInputManager() :
-	m_Initialized(false), m_RecvBuffer(nullptr)
+	m_Initialized(false), m_RecvBuffer(nullptr),
+	m_InputDecoder(nullptr)
 {
 	WSAData wsa_data;
 	int ret = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -18,6 +19,7 @@ NetworkInputManager::NetworkInputManager() :
 		fprintf(stderr, "Error(%d): Winsock init failed.\n", ret);
 		return;
 	}
+	
 	m_RecvBuffer = new char[m_RecvLen];
 	if (!m_RecvBuffer) {
 		fprintf(stderr, "Error(-1): Buffer allocation failed.\n");
@@ -25,7 +27,25 @@ NetworkInputManager::NetworkInputManager() :
 		return;
 	}
 
+	m_InputDecoder = std::make_unique<InputDecoder>();
+	if (!m_InputDecoder) {
+		fprintf(stderr, "Error(-1): Memory allocation failed.\n");
+		delete[] m_RecvBuffer;
+		WSACleanup();
+		return;
+	}
+
 	m_Initialized = true;
+}
+
+NetworkInputManager::~NetworkInputManager()
+{
+	if(m_InputDecoder)
+		m_InputDecoder.release();
+	if (m_RecvBuffer)
+		delete[] m_RecvBuffer;
+	WSACleanup();
+	m_Initialized = false;
 }
 
 static DWORD WINAPI disc_thread_fn(LPVOID lpParam)
@@ -36,6 +56,9 @@ static DWORD WINAPI disc_thread_fn(LPVOID lpParam)
 int NetworkInputManager::start()
 {
 	struct addrinfo* result = NULL, * ptr = NULL, hints;
+
+	if (!m_Initialized)
+		return -1;
 
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -86,14 +109,20 @@ int NetworkInputManager::start()
 	// Forever RECEIVE............... Unless crashed.
 
 	sockaddr sender_addr;
-	int sender_addr_len;
+	int sender_addr_len, ret1;
 	do {
+		printf("--*--\n");
+		fflush(stdout);
 		sender_addr_len = sizeof(sender_addr);
 		ret = recvfrom(cmd_sock, m_RecvBuffer, m_RecvLen, 0, (SOCKADDR*)&sender_addr, &sender_addr_len);
 		m_RecvBuffer[ret] = '\0';
 		if (ret > 0) {
 			printf("[C]> %s\t...(%d)\n", m_RecvBuffer, ret);
-			// TODO... Decode command and sendKey()
+			
+			// Decode command and sendKey()
+			if ( (ret1 = m_InputDecoder->decode(m_RecvBuffer, ret)) < 0) {
+				fprintf(stderr, "Error(%d): Message decode failed.\n", ret1);
+			}
 		}
 		else {
 			fprintf(stderr, "Error(%d): recv() failed\n", WSAGetLastError());
@@ -149,7 +178,7 @@ int NetworkInputManager::startDiscoverMode()
 
 	struct ip_mreq imr;
 
-	ret = InetPton(AF_INET, L"239.1.2.3", &imr.imr_multiaddr.s_addr);
+	ret = InetPton(AF_INET, L"239.3.4.5", &imr.imr_multiaddr.s_addr);
 	ret |= InetPton(AF_INET, L"0.0.0.0", &imr.imr_interface.s_addr) << 1;
 	if (ret != 0x3) { // XXX... Just a clever error check.
 		fprintf(stderr, "Error: InetPton() failed.\n");
@@ -164,6 +193,8 @@ int NetworkInputManager::startDiscoverMode()
 		WSACleanup();
 		return -1;
 	}
+	printf("Discovery at 239.3.4.5\n");
+	fflush(stdout);
 
 	// Forever RECEIVE............... Unless crashed.
 

@@ -139,13 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EventGenerator.cpp" />
+    <ClCompile Include="EventMux.cpp" />
     <ClCompile Include="InputDecoder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkInputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EventGenerator.h" />
+    <ClInclude Include="EventMux.h" />
     <ClInclude Include="InputDecoder.h" />
     <ClInclude Include="NetworkInputManager.h" />
   </ItemGroup>
