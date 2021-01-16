@@ -12,4 +12,6 @@ public:
 	/// NOTE:
 	/// 1st byte of @buff is MSB.
 	static uint16_t bytes2short(const char buff[2]);
+
+	static void printHex(const char* buff, size_t len);
 };

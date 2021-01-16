@@ -22,6 +22,46 @@
  */
 struct ControlMessage
 {
+	typedef enum {
+		MSG_TYPE_SEQUENCE	= 0x01,
+		MSG_TYPE_MERGE		= 0x02
+	} MessageType;
+
+	/************* Event values for the control message **************/
+	typedef enum {
+
+		// Low-level event types, i.e., very specific to device type.
+		// Eg: Keyboard specific or mouse specific events.
+		EV_KEY_PRESS = 1,
+		EV_KEY_RELEASE = 2,
+		EV_KEY_HOLD = 3,
+		EV_MOUSE_LEFT_PRESS = 4,
+		EV_MOUSE_LEFT_RELEASE = 5,
+		EV_MOUSE_LEFT_HOLD = 6,
+		EV_MOUSE_RIGHT_PRESS = 7,
+		EV_MOUSE_RIGHT_RELEASE = 8,
+		EV_MOUSE_RIGHT_HOLD = 9,
+		EV_MOUSE_SCROLL_UP = 10,
+		EV_MOUSE_SCROLL_DOWN = 11,
+
+		// High-level events that may directly resemble game specific actions directly.
+		// The client-side controller application will mostly send these commands over the network.
+		EV_SHOOT = 13, ///> value = 0(stop), 1(single), 2(hold)
+		EV_RELOAD = 14,
+		EV_AIMDOWN = 15,
+		EV_MOVE_FORWARD = 16,
+		EV_MOVE_BACKWARD = 17,
+		EV_STRAF_LEFT = 18,
+		EV_STRAF_RIGHT = 19,
+		EV_JUMP = 20,
+		EV_CROUCH = 21,
+		EV_PRONE = 22,
+		EV_RUN = 23,
+		EV_WALK = 24,
+		EV_SLOW = 25,
+
+	} EventType;
+
 	uint8_t type;
 	uint16_t nEvents;
 	struct Event {

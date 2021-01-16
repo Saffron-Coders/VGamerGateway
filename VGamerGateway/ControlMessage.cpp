@@ -8,6 +8,7 @@
 
 int ControlMessage::serialize(char* msg, size_t len)
 {
+	// TODO...
 	return 0;
 }
 
