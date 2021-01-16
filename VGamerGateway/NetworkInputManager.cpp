@@ -106,6 +106,12 @@ int NetworkInputManager::start()
 	}
 #endif
 
+	// FIXME
+	char ip_str[20];
+	inet_ntop(result->ai_family, (sockaddr*)result->ai_addr, ip_str, 20);
+	printf("Receiving commands at %s\n", ip_str);
+	fflush(stdout);
+
 	// Forever RECEIVE............... Unless crashed.
 
 	sockaddr sender_addr;
