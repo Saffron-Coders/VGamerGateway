@@ -26,13 +26,13 @@ int InputProcessor::process(const char* msg, size_t len)
     switch (ctl_msg.type) {
     
     case MSG_TYPE_SEQUENCE:
-        for (uint8_t event : ctl_msg.eventList) {
-            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event);
+        for (ControlMessage::Event event : ctl_msg.eventList) {
+            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event.eventName);
             if (it_handler != m_Handlers.end()) {
                 it_handler->second(ctl_msg);
             }
             else { // Warning log
-                fprintf(stderr, "Error: Input event %d unrecognized.\n", event);
+                fprintf(stderr, "Error: Input event %u unrecognized.\n", event.eventName);
             }
         }
         break;
@@ -46,6 +46,7 @@ int InputProcessor::process(const char* msg, size_t len)
 
 int InputProcessor::singleShot(const ControlMessage&)
 {
+    printf("SINGLE SHOT\n");
     return 0;
 }
 

@@ -143,11 +143,13 @@
     <ClCompile Include="InputProcessor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkInputManager.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ControlMessage.h" />
     <ClInclude Include="InputProcessor.h" />
     <ClInclude Include="NetworkInputManager.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

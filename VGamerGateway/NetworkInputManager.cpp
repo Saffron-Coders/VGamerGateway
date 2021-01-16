@@ -73,7 +73,7 @@ int NetworkInputManager::start()
 		WSACleanup();
 		return -1;
 	}
-
+	
 	// Create socket object for socket that will receive commands.
 	SOCKET cmd_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (cmd_sock == INVALID_SOCKET) {
@@ -105,12 +105,12 @@ int NetworkInputManager::start()
 		return -1;
 	}
 #endif
-
-	// FIXME
-	char ip_str[20];
-	inet_ntop(result->ai_family, (sockaddr*)result->ai_addr, ip_str, 20);
+	
+	// FIXME, TODO
+	/*char ip_str[20];
+	inet_ntop(result->ai_family, (sockaddr_in*)&result->ai_addr, ip_str, 20);
 	printf("Receiving commands at %s\n", ip_str);
-	fflush(stdout);
+	fflush(stdout);*/
 
 	// Forever RECEIVE............... Unless crashed.
 

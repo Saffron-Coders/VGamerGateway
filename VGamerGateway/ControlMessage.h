@@ -24,7 +24,13 @@ struct ControlMessage
 {
 	uint8_t type;
 	uint16_t nEvents;
-	std::vector<uint8_t> eventList;
+	struct Event {
+		uint8_t eventName, eventValue; ///> Event name and value
+		Event(uint8_t ev_name, uint8_t ev_value) :
+			eventName(ev_name), eventValue(ev_value)
+		{}
+	};
+	std::vector<Event> eventList;
 
 	//ControlMessage();
 
