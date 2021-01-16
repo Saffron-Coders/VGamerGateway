@@ -27,7 +27,7 @@ NetworkInputManager::NetworkInputManager() :
 		return;
 	}
 
-	m_InputDecoder = std::make_unique<InputDecoder>();
+	m_InputDecoder = std::make_unique<InputProcessor>();
 	if (!m_InputDecoder) {
 		fprintf(stderr, "Error(-1): Memory allocation failed.\n");
 		delete[] m_RecvBuffer;
@@ -120,7 +120,7 @@ int NetworkInputManager::start()
 			printf("[C]> %s\t...(%d)\n", m_RecvBuffer, ret);
 			
 			// Decode command and sendKey()
-			if ( (ret1 = m_InputDecoder->decode(m_RecvBuffer, ret)) < 0) {
+			if ( (ret1 = m_InputDecoder->process(m_RecvBuffer, ret)) < 0) {
 				fprintf(stderr, "Error(%d): Message decode failed.\n", ret1);
 			}
 		}

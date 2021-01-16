@@ -139,14 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EventMux.cpp" />
-    <ClCompile Include="InputDecoder.cpp" />
+    <ClCompile Include="ControlMessage.cpp" />
+    <ClCompile Include="InputProcessor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkInputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EventMux.h" />
-    <ClInclude Include="InputDecoder.h" />
+    <ClInclude Include="ControlMessage.h" />
+    <ClInclude Include="InputProcessor.h" />
     <ClInclude Include="NetworkInputManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

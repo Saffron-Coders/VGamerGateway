@@ -5,8 +5,6 @@
 #include <Windows.h>
 #include <WinUser.h>
 #include "NetworkInputManager.h"
-#include "EventGenerator.h"
-#include "InputDecoder.h"
 
 int main()
 {
