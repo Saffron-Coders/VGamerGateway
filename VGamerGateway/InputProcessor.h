@@ -12,7 +12,7 @@ public:
 	InputProcessor();
 	~InputProcessor();
 
-	int process(const char* msg, size_t len);
+	int process(const uint8_t* msg, size_t len);
 
 	/// Typedef for control message handler function.
 	typedef std::function<int(const ControlMessage& ctl_msg, uint8_t ev_value)> InputHandlerFunc;

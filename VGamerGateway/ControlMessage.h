@@ -46,14 +46,14 @@ struct ControlMessage
 
 		// High-level events that may directly resemble game specific actions directly.
 		// The client-side controller application will mostly send these commands over the network.
-		EV_SHOOT = 13, ///> value = 0(stop), 1(single), 2(hold)
+		EV_SHOOT = 13, ///> values = 0(stop), 1(single), 2(hold)
 		EV_RELOAD = 14,
-		EV_AIMDOWN = 15,
-		EV_MOVE_FORWARD = 16,
+		EV_AIMDOWN = 15, ///> values = 0(release), 1(aimdown)
+		EV_MOVE_FORWARD = 16, ///> values = 0(slow), 1(walk), 2(sprint)
 		EV_MOVE_BACKWARD = 17,
 		EV_STRAF_LEFT = 18,
 		EV_STRAF_RIGHT = 19,
-		EV_JUMP = 20,
+		EV_JUMP = 20,			///> values = 0(release), 1(once), 2(hold)
 		EV_CROUCH = 21,
 		EV_PRONE = 22,
 		EV_RUN = 23,
@@ -76,10 +76,10 @@ struct ControlMessage
 
 	///  Serialize the message object to string and return to (msg,len)
 	/// Used when sending message.
-	int serialize(char *msg, size_t len);
+	int serialize(uint8_t* msg, size_t len);
 
 	/// Deserializes string message to this object.
 	/// Used when receiving message.
-	int deserialize(const char* msg, size_t len);
+	int deserialize(const uint8_t* msg, size_t len);
 };
 

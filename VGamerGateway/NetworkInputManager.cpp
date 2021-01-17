@@ -22,7 +22,7 @@ NetworkInputManager::NetworkInputManager() :
 		return;
 	}
 	
-	m_RecvBuffer = new char[m_RecvLen];
+	m_RecvBuffer = new uint8_t[m_RecvLen];
 	if (!m_RecvBuffer) {
 		fprintf(stderr, "Error(-1): Buffer allocation failed.\n");
 		WSACleanup();
@@ -116,7 +116,7 @@ int NetworkInputManager::start()
 
 	// Forever RECEIVE............... Unless crashed.
 
-	char* extracted_msg = NULL;
+	uint8_t* extracted_msg = NULL;
 	size_t extracted_msg_len = 0;
 	sockaddr sender_addr;
 	int sender_addr_len, ret1;
@@ -124,7 +124,7 @@ int NetworkInputManager::start()
 		printf("--*--\n");
 		fflush(stdout);
 		sender_addr_len = sizeof(sender_addr);
-		ret = recvfrom(cmd_sock, m_RecvBuffer, m_RecvLen, 0, (SOCKADDR*)&sender_addr, &sender_addr_len);
+		ret = recvfrom(cmd_sock, (char*)m_RecvBuffer, m_RecvLen, 0, (SOCKADDR*)&sender_addr, &sender_addr_len);
 		//m_RecvBuffer[ret] = '\0';
 
 		if (ret > 0) {
@@ -132,17 +132,20 @@ int NetworkInputManager::start()
 			Utils::printHex(m_RecvBuffer, ret);
 			fflush(stdout);
 
-			char* start_ptr = m_RecvBuffer;
+			uint8_t* start_ptr = (uint8_t*)m_RecvBuffer;
 			int bytes_left = ret;
 			while (bytes_left > 0) {
 				
 				// Extract a single message from the full buffer.
-				if (extractSingleMessage(start_ptr, bytes_left, extracted_msg, extracted_msg_len) < 0)
-					continue;
+				if (extractSingleMessage(start_ptr, bytes_left, &extracted_msg, extracted_msg_len) < 0)
+					break; // Discard all buffered message.
+
 				bytes_left -= extracted_msg_len;
 				start_ptr += extracted_msg_len;
 
-				printf("[C]> %s\t...(%d)\n", extracted_msg, extracted_msg_len);
+				printf("[C]> ");
+				Utils::printHex(extracted_msg, extracted_msg_len);
+				puts("");
 
 				// Process command
 				if ((ret1 = m_InputProcessor->process(extracted_msg, extracted_msg_len)) < 0) {
@@ -250,7 +253,7 @@ int NetworkInputManager::startDiscoverMode()
 
 NetworkInputManager NetInMgr;
 
-int NetworkInputManager::extractSingleMessage(const char* buff, size_t len, char* extracted_msg, size_t& extracted_msg_len)
+int NetworkInputManager::extractSingleMessage(const uint8_t* buff, size_t len, uint8_t** extracted_msg, size_t& extracted_msg_len)
 {
 	if (!buff || (len <= 0))
 		return -1;
@@ -262,7 +265,7 @@ int NetworkInputManager::extractSingleMessage(const char* buff, size_t len, char
 
 	for (int i = 0; i < len - 1; ++i) {
 		if ((buff[i] == 0xff) && (buff[i + 1] == 0xff)) {
-			extracted_msg = (char*)buff;
+			*extracted_msg = (uint8_t*)buff;
 			extracted_msg_len = i + 2;
 			return 0;
 		}

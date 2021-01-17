@@ -7,13 +7,25 @@ InputProcessor::InputProcessor()
     m_Handlers.insert( std::pair<uint16_t, InputHandlerFunc>(
         ControlMessage::EventType::EV_SHOOT, std::bind(&InputProcessor::shoot, std::ref(*this), std::placeholders::_1, std::placeholders::_2))
     );
+
+    m_Handlers.insert(std::pair<uint16_t, InputHandlerFunc>(
+        ControlMessage::EventType::EV_AIMDOWN, std::bind(&InputProcessor::aimdown, std::ref(*this), std::placeholders::_1, std::placeholders::_2))
+    );
+
+    m_Handlers.insert(std::pair<uint16_t, InputHandlerFunc>(
+        ControlMessage::EventType::EV_MOVE_FORWARD, std::bind(&InputProcessor::moveForward, std::ref(*this), std::placeholders::_1, std::placeholders::_2))
+    );
+
+    m_Handlers.insert(std::pair<uint16_t, InputHandlerFunc>(
+        ControlMessage::EventType::EV_JUMP, std::bind(&InputProcessor::jump, std::ref(*this), std::placeholders::_1, std::placeholders::_2))
+    );
 }
 
 InputProcessor::~InputProcessor()
 {
 }
 
-int InputProcessor::process(const char* msg, size_t len)
+int InputProcessor::process(const uint8_t* msg, size_t len)
 {
     ControlMessage ctl_msg;
     
@@ -92,6 +104,7 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
 
 int InputProcessor::aimdown(const ControlMessage& ctl_msg, uint8_t ev_value)
 {
+    printf("AIMDOWN -> ");
     return 0;
 }
 
@@ -102,6 +115,7 @@ int InputProcessor::reload(const ControlMessage& ctl_msg, uint8_t ev_value)
 
 int InputProcessor::moveForward(const ControlMessage& ctl_msg, uint8_t ev_value)
 {
+    printf("MOVE_FORWARD -> ");
     return 0;
 }
 
@@ -122,6 +136,7 @@ int InputProcessor::strafRight(const ControlMessage& ctl_msg, uint8_t ev_value)
 
 int InputProcessor::jump(const ControlMessage& ctl_msg, uint8_t ev_value)
 {
+    printf("JUMP -> ");
     return 0;
 }
 
