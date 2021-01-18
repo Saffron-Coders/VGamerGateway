@@ -4,10 +4,10 @@
 #include <vector>
 
 /*
- *         8b               16b               16b            16b                     16b
- *   +-------------+-------------------+---------------+--------------+--------+--------------+
- *   |   Type      |  N(no. of events) |   Event[0]    |   Event[1]   |  ....  |  Event[N-1]  |
- *   +-------------+-------------------+---------------+--------------+--------+--------------+
+ *         1b               2b               2b              2b                       2b                  2b
+ *   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
+ *   |   Type      |  N(no. of events) |   Event[0]    |   Event[1]   |  ....  |  Event[N-1]  | Termination (0xffff) |
+ *   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
  *
  * - Type(1-byte): Specifies how each events in the event list are to be processed
  * - Values:
@@ -15,10 +15,12 @@
  *   > MERGE(0x02): Create a merged event out of the all events in event list. Event[0] represent the main event type.
  *     Reset of the Events defines the behaviour.
  *
- * - N(2-byte): Number of events in the event list.
+ * - N(2-bytes): Number of events in the event list.
  *
  * - Event[] ((2*N)-bytes): A sequence of events. Each of size 2-byte.
  *   1st byte represents event type and 2nd byte represents value.
+ * 
+ * - Termination(2-bytes): Message termination sequence. Value = 0xffff
  */
 struct ControlMessage
 {
