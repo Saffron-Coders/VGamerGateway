@@ -2,13 +2,67 @@
 
 import sys
 import struct
+import time
+import socket
 
+usage = 'Usage: vg_send <cmd> <count> [<delay_time>]'
+
+VGAMER_GATEWAY_IP = "192.168.1.2"
+VGAMER_GATEWAY_PORT = 15000
+
+# Initialize socket object globally
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# TODO... Store these commands into dictionary where,
+# key = cmd_str, value = cmd
 # List of messages predefined.
-cmd_single_shot = struct.pack("!BHBB", 0x1, 1, 13, 0)
+cmd_single_shot = struct.pack("!BHBBBB", 0x1, 1, 13, 1, 0xff, 0xff)
+cmd_spray_shot = struct.pack("!BHBBBB", 0x1, 1, 13, 2, 0xff, 0xff)
+cmd_aimdown = struct.pack("!BHBBBB", 0x1, 1, 15, 1, 0xff, 0xff)
+cmd_walk_forward = struct.pack("!BHBBBB", 0x1, 1, 16, 1, 0xff, 0xff)
+cmd_jump = struct.pack("!BHBBBB", 0x1, 1, 20, 1, 0xff, 0xff)
+
+DEFAULT_DELAY = 0.5
+
+# Get the appropriate pre-packed command object
+def str2cmd(cmd_str):
+    if cmd_str == 'cmd_single_shot':
+        return cmd_single_shot
+    if cmd_str == 'cmd_spray_shot':
+        return cmd_spray_shot
+    if cmd_str == 'cmd_aimdown':
+        return cmd_aimdown
+    if cmd_str == 'cmd_walk_forward':
+        return cmd_walk_forward
+    if cmd_str == 'cmd_jump':
+        return cmd_jump
+    else:
+        return None
+
+def udp_send(data):
+    sock.sendto(data, (VGAMER_GATEWAY_IP, VGAMER_GATEWAY_PORT))
+
+# Send a command @count times.
+def send_cmd(cmd_str, count, delay):
+    cmd = str2cmd(cmd_str)
+    while count > 0:
+        sys.stdout.write(cmd)
+        udp_send(cmd)
+        time.sleep(delay)
+        count -= 1
 
 def main():
-    #print('hello')
-    sys.stdout.write(cmd_single_shot)
-    #print(cmd_single_shot, end="")
+    if len(sys.argv) < 3:
+        print(usage)
+        return -1
+    cmd_str = sys.argv[1]
+    count = int(sys.argv[2])
+
+    # Optional delay time
+    delay = DEFAULT_DELAY
+    if len(sys.argv) == 4:
+        delay = float(sys.argv[3])
+
+    send_cmd(cmd_str, count, delay)
 
 exit(main())
