@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <Windows.h>
+#include "ScanCode.h"
 #include "InputProcessor.h"
 
 InputProcessor::InputProcessor()
@@ -137,7 +138,14 @@ int InputProcessor::moveForward(const ControlMessage& ctl_msg, uint8_t ev_value)
     case 1: // Walk/Normal
         // Press left-click
         inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].ki.wVk = 0x57; //'W' key
+        inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE; // Keydown
+        inputs[0].ki.wScan = ScanCode::XSet3::KEY_W;
+        ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
+        Sleep(200);
+        inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // keyup
         ret = SendInput(1, inputs, sizeof(INPUT));
         if (ret <= 0) {
             fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
@@ -186,7 +194,14 @@ int InputProcessor::jump(const ControlMessage& ctl_msg, uint8_t ev_value)
     case 1: // Once
         // Press left-click
         inputs[0].type = INPUT_KEYBOARD;
-        inputs[0].ki.wVk = VK_SPACE; //'SPACE' key
+        inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE; // Keydown
+        inputs[0].ki.wScan = ScanCode::XSet3::KEY_SPACE;
+        ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
+        Sleep(200);
+        inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Keyup
         ret = SendInput(1, inputs, sizeof(INPUT));
         if (ret <= 0) {
             fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
