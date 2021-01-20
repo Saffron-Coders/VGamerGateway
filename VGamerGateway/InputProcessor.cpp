@@ -70,6 +70,9 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
         inputs[0].mi.mouseData = XBUTTON1;
         inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
         ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
         printf("STOP\n");
         break;
     
@@ -83,6 +86,9 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
         inputs[1].mi.mouseData = XBUTTON1;
         inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
         ret = SendInput(2, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
         printf("SINGLE\n");
         break;
     
@@ -92,6 +98,9 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
         inputs[0].mi.mouseData = XBUTTON1;
         inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
         ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
         printf("SPRAY\n");
         break;
     
@@ -116,6 +125,34 @@ int InputProcessor::reload(const ControlMessage& ctl_msg, uint8_t ev_value)
 int InputProcessor::moveForward(const ControlMessage& ctl_msg, uint8_t ev_value)
 {
     printf("MOVE_FORWARD -> ");
+
+    UINT ret;
+    INPUT inputs[2];
+    ZeroMemory(inputs, 2);
+
+    switch (ev_value) {
+
+    case 0: // Slow
+        break;
+    case 1: // Walk/Normal
+        // Press left-click
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].ki.wVk = 0x57; //'W' key
+        ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
+        printf("WALK\n");
+        break;
+
+    case 2: // Sprint
+        break;
+
+    default:
+        printf("??\n");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -137,6 +174,34 @@ int InputProcessor::strafRight(const ControlMessage& ctl_msg, uint8_t ev_value)
 int InputProcessor::jump(const ControlMessage& ctl_msg, uint8_t ev_value)
 {
     printf("JUMP -> ");
+
+    UINT ret;
+    INPUT inputs[2];
+    ZeroMemory(inputs, 2);
+
+    switch (ev_value) {
+
+    case 0: // Release
+        break;
+    case 1: // Once
+        // Press left-click
+        inputs[0].type = INPUT_KEYBOARD;
+        inputs[0].ki.wVk = VK_SPACE; //'SPACE' key
+        ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
+        printf("ONCE\n");
+        break;
+
+    case 2: // Hold
+        break;
+
+    default:
+        printf("??\n");
+        return -1;
+    }
+
     return 0;
 }
 
