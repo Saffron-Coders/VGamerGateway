@@ -61,20 +61,24 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
     
     UINT ret;
     INPUT inputs[2];
+    static INPUT prev_input = { 0 };
     ZeroMemory(inputs, 2);
     
     switch (ev_value) {
     
     case 0: // Stop
-        // Just release left-click.
-        inputs[0].type = INPUT_MOUSE;
-        inputs[0].mi.mouseData = XBUTTON1;
-        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        ret = SendInput(1, inputs, sizeof(INPUT));
-        if (ret <= 0) {
-            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        if (prev_input.type == INPUT_MOUSE) {
+            if (prev_input.mi.dwFlags == MOUSEEVENTF_LEFTDOWN)
+                prev_input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+            if (prev_input.mi.dwFlags == MOUSEEVENTF_RIGHTDOWN)
+                prev_input.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+            ret = SendInput(1, &prev_input, sizeof(INPUT));
+            if (ret <= 0) {
+                fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+            }
         }
         printf("STOP\n");
+        ZeroMemory(&prev_input, sizeof(INPUT));
         break;
     
     case 1: // Single shot
@@ -82,11 +86,16 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
         inputs[0].type = INPUT_MOUSE;
         inputs[0].mi.mouseData = XBUTTON1;
         inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        ret = SendInput(1, inputs, sizeof(INPUT));
+        if (ret <= 0) {
+            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+        }
+        Sleep(50);
         // Release left-click
-        inputs[1].type = INPUT_MOUSE;
-        inputs[1].mi.mouseData = XBUTTON1;
-        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        ret = SendInput(2, inputs, sizeof(INPUT));
+        inputs[0].type = INPUT_MOUSE;
+        inputs[0].mi.mouseData = XBUTTON1;
+        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        ret = SendInput(1, inputs, sizeof(INPUT));
         if (ret <= 0) {
             fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
         }
@@ -103,6 +112,7 @@ int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
             fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
         }
         printf("SPRAY\n");
+        prev_input = inputs[0];
         break;
     
     default:
@@ -128,14 +138,25 @@ int InputProcessor::moveForward(const ControlMessage& ctl_msg, uint8_t ev_value)
     printf("MOVE_FORWARD -> ");
 
     UINT ret;
-    INPUT inputs[2];
+    INPUT inputs[2]; // Holds previous command too.
+    static INPUT prev_input = { 0 };
     ZeroMemory(inputs, 2);
 
     switch (ev_value) {
 
-    case 0: // Slow
+    case 0: // Stop
+        if (prev_input.type == INPUT_KEYBOARD) {
+            prev_input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+            ret = SendInput(1, &prev_input, sizeof(INPUT));
+            if (ret <= 0) {
+                fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+            }
+        }
+        printf("STOP\n");
         break;
-    case 1: // Walk/Normal
+    case 1: // Slow
+        break;
+    case 2: // Walk/Normal
         // Press left-click
         inputs[0].type = INPUT_KEYBOARD;
         inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE; // Keydown
@@ -144,16 +165,11 @@ int InputProcessor::moveForward(const ControlMessage& ctl_msg, uint8_t ev_value)
         if (ret <= 0) {
             fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
         }
-        Sleep(200);
-        inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // keyup
-        ret = SendInput(1, inputs, sizeof(INPUT));
-        if (ret <= 0) {
-            fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
-        }
-        printf("WALK\n");
+        printf("NORMAL\n");
+        prev_input = inputs[0];
         break;
 
-    case 2: // Sprint
+    case 3: // Sprint
         break;
 
     default:
