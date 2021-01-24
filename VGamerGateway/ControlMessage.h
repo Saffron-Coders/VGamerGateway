@@ -4,29 +4,36 @@
 #include <vector>
 
 /*
- *         1b               2b               2b              2b                       2b                  2b
+ *         1b               2b               2b/4b          2b/4b                   2b/4b                  2b
  *   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
  *   |   Type      |  N(no. of events) |   Event[0]    |   Event[1]   |  ....  |  Event[N-1]  | Termination (0xffff) |
  *   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
  *
  * - Type(1-byte): Specifies how each events in the event list are to be processed
  * - Values:
- *   > SEQUENCE(0x01): Process events sequentially and independently starting from Event[0] till Event[N-1].
- *   > MERGE(0x02): Create a merged event out of the all events in event list. Event[0] represent the main event type.
- *     Reset of the Events defines the behaviour.
+ *   > KEY(0x01): Process events sequentially and independently as single key press events starting from Event[0] till Event[N-1].
+ *   > MOUSE(0x02): Consider each event as a 4-bytes word where the first half-word(2-byte) represents x-axis value and the 2nd y-axis.
  *
  * - N(2-bytes): Number of events in the event list.
  *
- * - Event[] ((2*N)-bytes): A sequence of events. Each of size 2-byte.
- *   1st byte represents event type and 2nd byte represents value.
+ * - Event[]: A sequence of events according to "Type".
+ *   For Type == 0x01,
+ *     sizeof(Event[i]) = 2 bytes, therefore,
+ *     sizeof(Event[]) = (2*N) bytes.
+ *     > 1st byte = Event_Type, 2nd byte = Value.
+ * 
+ *   For Type == 0x02,
+ *     sizeof(Event[i]) = 4 bytes, therefore,
+ *     sizeof(Event[]) = (4*N) bytes.
+ *     > 1st half-word = (+/-)X-Axis, 2nd half-word = (+/-)Y-Axis.
  * 
  * - Termination(2-bytes): Message termination sequence. Value = 0xffff
  */
 struct ControlMessage
 {
 	typedef enum {
-		MSG_TYPE_SEQUENCE	= 0x01,
-		MSG_TYPE_MERGE		= 0x02
+		MSG_TYPE_KEY		= 0x01,
+		MSG_TYPE_MOUSE		= 0x02
 	} MessageType;
 
 	/************* Event values for the control message **************/
@@ -34,9 +41,10 @@ struct ControlMessage
 
 		// Low-level event types, i.e., very specific to device type.
 		// Eg: Keyboard specific or mouse specific events.
+
 		EV_KEY_PRESS = 1,
 		EV_KEY_RELEASE = 2,
-		EV_KEY_HOLD = 3,
+		EV_MOUSE_HOLD = 3,
 		EV_MOUSE_LEFT_PRESS = 4,
 		EV_MOUSE_LEFT_RELEASE = 5,
 		EV_MOUSE_LEFT_HOLD = 6,
@@ -66,12 +74,19 @@ struct ControlMessage
 
 	uint8_t type;
 	uint16_t nEvents;
-	struct Event {
-		uint8_t eventName, eventValue; ///> Event name and value
-		Event(uint8_t ev_name, uint8_t ev_value) :
-			eventName(ev_name), eventValue(ev_value)
-		{}
+	
+	union Event {
+		// Type 0x01
+		struct KeyEvent {
+			uint8_t eventName, eventValue; ///> Event name and value
+		} keyEvent ;
+
+		// Type 0x02
+		struct MouseEvent {
+			short x, y; ///> X/Y axis
+		} mouseEvent;
 	};
+
 	std::vector<Event> eventList;
 
 	//ControlMessage();
@@ -82,6 +97,10 @@ struct ControlMessage
 
 	/// Deserializes string message to this object.
 	/// Used when receiving message.
+	/// @msg: Buffer containing raw bytes of message.
+	/// @len: Length of the whole UDP payload received from a client.
+	/// Returns the byte size of the parsed message out of
+	/// the whole @len sized chunk.
 	int deserialize(const uint8_t* msg, size_t len);
 };
 

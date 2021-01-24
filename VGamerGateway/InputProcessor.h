@@ -12,6 +12,8 @@ public:
 	InputProcessor();
 	~InputProcessor();
 
+	/// Process each event sequentially.
+	/// Returns whatever ControlMessage::deserialize() returns.	
 	int process(const uint8_t* msg, size_t len);
 
 	/// Typedef for control message handler function.
@@ -22,7 +24,7 @@ private:
 	InputHandlerMap m_Handlers;
 
 	// -------- All the handler functions ----------
-
+	int mouseMove(const ControlMessage& ctl_msg, short x, short y);
 	int shoot(const ControlMessage& ctl_msg, uint8_t ev_value);
 	int aimdown(const ControlMessage& ctl_msg, uint8_t ev_value);
 	int reload(const ControlMessage& ctl_msg, uint8_t ev_value);

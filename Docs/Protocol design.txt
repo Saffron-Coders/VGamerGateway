@@ -1,0 +1,30 @@
+1. All messages must be sent in the following manner:
+  - No padding bytes.
+  - Network byte order, i.e, big-endian.
+  
+2. Control message structure:
+
+         1b               2b               2b/4b          2b/4b                   2b/4b                  2b
+   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
+   |   Type      |  N(no. of events) |   Event[0]    |   Event[1]   |  ....  |  Event[N-1]  | Termination (0xffff) |
+   +-------------+-------------------+---------------+--------------+--------+--------------+----------------------+
+
+ - Type(1-byte): Specifies how each events in the event list are to be processed
+ - Values:
+   > KEY(0x01): Process events sequentially and independently as single key press events starting from Event[0] till Event[N-1].
+   > MOUSE(0x02): Consider each event as a 4-bytes word where the first half-word(2-byte) represents x-axis value and the 2nd y-axis.
+
+ - N(2-bytes): Number of events in the event list.
+
+ - Event[]: A sequence of events according to "Type".
+   For Type == 0x01,
+     sizeof(Event[i]) = 2 bytes, therefore,
+     sizeof(Event[]) = (2*N) bytes.
+     > 1st byte = Event_Type, 2nd byte = Value.
+ 
+   For Type == 0x02,
+     sizeof(Event[i]) = 4 bytes, therefore,
+     sizeof(Event[]) = (4*N) bytes.
+     > 1st half-word = X-Axis, 2nd half-word = Y-Axis.
+ 
+ - Termination(2-bytes): Message termination sequence. Value = 0xffff

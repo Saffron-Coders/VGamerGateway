@@ -31,27 +31,38 @@ int InputProcessor::process(const uint8_t* msg, size_t len)
     ControlMessage ctl_msg;
     
     int ret = ctl_msg.deserialize(msg, len);
-    if (ret < 0)
+    if (ret <= 0)
         return ret;
-
-    switch (ctl_msg.type) {
     
-    case ControlMessage::MessageType::MSG_TYPE_SEQUENCE:
-        for (ControlMessage::Event event : ctl_msg.eventList) {
-            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event.eventName);
+    // Sequentially process events.
+	for (ControlMessage::Event event : ctl_msg.eventList) {
+
+        switch (ctl_msg.type) {
+        case ControlMessage::MessageType::MSG_TYPE_KEY:
+        {
+            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event.keyEvent.eventName);
             if (it_handler != m_Handlers.end()) {
-                it_handler->second(ctl_msg, event.eventValue);
+                it_handler->second(ctl_msg, event.keyEvent.eventValue);
             }
             else { // Warning log
-                fprintf(stderr, "Error: Input event %u unrecognized.\n", event.eventName);
+                fprintf(stderr, "Error: Input event %u unrecognized.\n", event.keyEvent.eventName);
             }
+            break;
         }
-        break;
+        case ControlMessage::MessageType::MSG_TYPE_MOUSE:
+        {
+            mouseMove(ctl_msg, event.mouseEvent.x, event.mouseEvent.y);
+            break;
+        }
+        }
+	}
 
-    case ControlMessage::MessageType::MSG_TYPE_MERGE:
-        break;
-    }
-    
+    return ret;
+}
+
+int InputProcessor::mouseMove(const ControlMessage& ctl_msg, short x, short y)
+{
+    printf("MOUSE_MOVE -> %d, %d\n", x, y);
     return 0;
 }
 
