@@ -9,7 +9,7 @@
 
 PCSTR NetworkInputManager::NET_IN_COMMAND_PORT = "15000";
 PCSTR NetworkInputManager::NET_IN_DISCOVER_PORT = "15010";
-int NetworkInputManager::m_RecvLen = 512;
+int NetworkInputManager::m_RecvLen = 1024;
 
 NetworkInputManager::NetworkInputManager() :
 	m_Initialized(false), m_RecvBuffer(nullptr),
