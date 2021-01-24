@@ -25,7 +25,7 @@
  *   For Type == 0x02,
  *     sizeof(Event[i]) = 4 bytes, therefore,
  *     sizeof(Event[]) = (4*N) bytes.
- *     > 1st half-word = X-Axis, 2nd half-word = Y-Axis.
+ *     > 1st half-word = (+/-)X-Axis, 2nd half-word = (+/-)Y-Axis.
  * 
  * - Termination(2-bytes): Message termination sequence. Value = 0xffff
  */
@@ -44,7 +44,7 @@ struct ControlMessage
 
 		EV_KEY_PRESS = 1,
 		EV_KEY_RELEASE = 2,
-		EV_MOUSE_MOVE = 3,  // 0x02 type
+		EV_MOUSE_HOLD = 3,
 		EV_MOUSE_LEFT_PRESS = 4,
 		EV_MOUSE_LEFT_RELEASE = 5,
 		EV_MOUSE_LEFT_HOLD = 6,
@@ -83,7 +83,7 @@ struct ControlMessage
 
 		// Type 0x02
 		struct MouseEvent {
-			uint16_t x, y; ///> X/Y axis
+			short x, y; ///> X/Y axis
 		} mouseEvent;
 	};
 

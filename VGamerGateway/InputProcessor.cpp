@@ -51,12 +51,19 @@ int InputProcessor::process(const uint8_t* msg, size_t len)
         }
         case ControlMessage::MessageType::MSG_TYPE_MOUSE:
         {
+            mouseMove(ctl_msg, event.mouseEvent.x, event.mouseEvent.y);
             break;
         }
         }
 	}
 
     return ret;
+}
+
+int InputProcessor::mouseMove(const ControlMessage& ctl_msg, short x, short y)
+{
+    printf("MOUSE_MOVE -> %d, %d\n", x, y);
+    return 0;
 }
 
 int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)
