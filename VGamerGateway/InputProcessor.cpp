@@ -63,6 +63,22 @@ int InputProcessor::process(const uint8_t* msg, size_t len)
 int InputProcessor::mouseMove(const ControlMessage& ctl_msg, short x, short y)
 {
     printf("MOUSE_MOVE -> %d, %d\n", x, y);
+    
+    UINT ret;
+    INPUT input;
+    ZeroMemory(&input, sizeof(INPUT));
+
+    // Relatively move mouse position.
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    input.mi.mouseData = 0;
+    input.mi.dx = x; // (long)(x * (65536.0f / GetSystemMetrics(SM_CXSCREEN)));
+    input.mi.dy = y; // (long)(y * (65536.0f / GetSystemMetrics(SM_CYSCREEN)));
+    ret = SendInput(1, &input, sizeof(INPUT));
+    if (ret <= 0) {
+        fprintf(stderr, "Error(%d): SendInput() returned %d\n", GetLastError(), ret);
+    }
+
     return 0;
 }
 
