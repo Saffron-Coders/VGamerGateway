@@ -7,7 +7,7 @@ import socket
 
 usage = 'Usage: vg_send <cmd> <count> [<delay_time>]'
 
-VGAMER_GATEWAY_IP = "192.168.1.6"
+VGAMER_GATEWAY_IP = "192.168.1.4"
 VGAMER_GATEWAY_PORT = 15000
 
 # Initialize socket object globally
@@ -16,13 +16,17 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # TODO... Store these commands into dictionary where,
 # key = cmd_str, value = cmd
 # List of messages predefined.
-cmd_stop_shoot = struct.pack("!BHBBBB", 0x1, 1, 13, 0, 0xff, 0xff)
-cmd_single_shot = struct.pack("!BHBBBB", 0x1, 1, 13, 1, 0xff, 0xff)
-cmd_spray_shot = struct.pack("!BHBBBB", 0x1, 1, 13, 2, 0xff, 0xff)
-cmd_aimdown = struct.pack("!BHBBBB", 0x1, 1, 15, 1, 0xff, 0xff)
-cmd_walk_forward = struct.pack("!BHBBBB", 0x1, 1, 16, 2, 0xff, 0xff)
-cmd_walk_stop = struct.pack("!BHBBBB", 0x1, 1, 16, 0, 0xff, 0xff)
-cmd_jump = struct.pack("!BHBBBB", 0x1, 1, 20, 1, 0xff, 0xff)
+cmd_stop_shoot = struct.pack("!BH BB BB", 0x1, 1, 13, 0, 0xff, 0xff)
+cmd_single_shot = struct.pack("!BH BB BB", 0x1, 1, 13, 1, 0xff, 0xff)
+cmd_spray_shot = struct.pack("!BH BB BB", 0x1, 1, 13, 2, 0xff, 0xff)
+cmd_aimdown = struct.pack("!BH BB BB", 0x1, 1, 15, 1, 0xff, 0xff)
+cmd_walk_forward = struct.pack("!BH BB BB", 0x1, 1, 16, 2, 0xff, 0xff)
+cmd_walk_stop = struct.pack("!BH BB BB", 0x1, 1, 16, 0, 0xff, 0xff)
+cmd_jump = struct.pack("!BH BB BB", 0x1, 1, 20, 1, 0xff, 0xff)
+
+# Move (+10, +10) from current mouse position.
+cmd_mouse_right = struct.pack("!BH hh BB", 0x2, 1, 10, 10, 0xff, 0xff)
+cmd_mouse_left = struct.pack("!BH hh BB", 0x2, 1, -10, -10, 0xff, 0xff)
 
 DEFAULT_DELAY = 0.5
 
@@ -42,6 +46,10 @@ def str2cmd(cmd_str):
         return cmd_walk_stop
     if cmd_str == 'cmd_jump':
         return cmd_jump
+    if cmd_str == 'cmd_mouse_right':
+        return cmd_mouse_right
+    if cmd_str == 'cmd_mouse_left':
+        return cmd_mouse_left
     else:
         return None
 
