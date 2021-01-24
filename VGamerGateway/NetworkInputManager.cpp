@@ -133,24 +133,25 @@ int NetworkInputManager::start()
 			fflush(stdout);
 
 			uint8_t* start_ptr = (uint8_t*)m_RecvBuffer;
-			int bytes_left = ret;
+			int bytes_left = ret, bytes_read = 0;
 			while (bytes_left > 0) {
 				
 				// Extract a single message from the full buffer.
-				if (extractSingleMessage(start_ptr, bytes_left, &extracted_msg, extracted_msg_len) < 0)
-					break; // Discard all buffered message.
-
-				bytes_left -= extracted_msg_len;
-				start_ptr += extracted_msg_len;
-
-				printf("[C]> ");
-				Utils::printHex(extracted_msg, extracted_msg_len);
-				puts("");
+				//if (extractSingleMessage(start_ptr, bytes_left, &extracted_msg, extracted_msg_len) < 0)
+				//	break; // Discard all buffered message.
 
 				// Process command
-				if ((ret1 = m_InputProcessor->process(extracted_msg, extracted_msg_len)) < 0) {
-					fprintf(stderr, "Error(%d): Message decode failed.\n", ret1);
+				if ((bytes_read = m_InputProcessor->process((const uint8_t*)start_ptr, bytes_left)) <= 0) {
+					fprintf(stderr, "Error(%d): Message decode failed.\n", bytes_read);
+					break; // Consider all remaining buffered content as invalid.
 				}
+				bytes_left -= bytes_read;
+				start_ptr += bytes_read;
+
+				// Currently process command.
+				printf("[C]> ");
+				Utils::printHex(start_ptr - bytes_read, bytes_read);
+				puts("");
 			}
 		}
 		else {
@@ -258,8 +259,8 @@ int NetworkInputManager::extractSingleMessage(const uint8_t* buff, size_t len, u
 	if (!buff || (len <= 0))
 		return -1;
 
-	if ((buff[0] != ControlMessage::MessageType::MSG_TYPE_SEQUENCE) &&
-		(buff[0] != ControlMessage::MessageType::MSG_TYPE_MERGE)) {
+	if ((buff[0] != ControlMessage::MessageType::MSG_TYPE_KEY) &&
+		(buff[0] != ControlMessage::MessageType::MSG_TYPE_MOUSE)) {
 		return -1;
 	}
 

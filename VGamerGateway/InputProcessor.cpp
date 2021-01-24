@@ -31,28 +31,32 @@ int InputProcessor::process(const uint8_t* msg, size_t len)
     ControlMessage ctl_msg;
     
     int ret = ctl_msg.deserialize(msg, len);
-    if (ret < 0)
+    if (ret <= 0)
         return ret;
-
-    switch (ctl_msg.type) {
     
-    case ControlMessage::MessageType::MSG_TYPE_SEQUENCE:
-        for (ControlMessage::Event event : ctl_msg.eventList) {
-            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event.eventName);
+    // Sequentially process events.
+	for (ControlMessage::Event event : ctl_msg.eventList) {
+
+        switch (ctl_msg.type) {
+        case ControlMessage::MessageType::MSG_TYPE_KEY:
+        {
+            InputHandlerMap::const_iterator it_handler = m_Handlers.find(event.keyEvent.eventName);
             if (it_handler != m_Handlers.end()) {
-                it_handler->second(ctl_msg, event.eventValue);
+                it_handler->second(ctl_msg, event.keyEvent.eventValue);
             }
             else { // Warning log
-                fprintf(stderr, "Error: Input event %u unrecognized.\n", event.eventName);
+                fprintf(stderr, "Error: Input event %u unrecognized.\n", event.keyEvent.eventName);
             }
+            break;
         }
-        break;
+        case ControlMessage::MessageType::MSG_TYPE_MOUSE:
+        {
+            break;
+        }
+        }
+	}
 
-    case ControlMessage::MessageType::MSG_TYPE_MERGE:
-        break;
-    }
-    
-    return 0;
+    return ret;
 }
 
 int InputProcessor::shoot(const ControlMessage& ctl_msg, uint8_t ev_value)

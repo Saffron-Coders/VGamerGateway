@@ -12,6 +12,8 @@ public:
 	InputProcessor();
 	~InputProcessor();
 
+	/// Process each event sequentially.
+	/// Returns whatever ControlMessage::deserialize() returns.	
 	int process(const uint8_t* msg, size_t len);
 
 	/// Typedef for control message handler function.

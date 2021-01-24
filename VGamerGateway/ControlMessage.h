@@ -44,7 +44,7 @@ struct ControlMessage
 
 		EV_KEY_PRESS = 1,
 		EV_KEY_RELEASE = 2,
-		EV_MOUSE_MOVE = 3, // 2 events
+		EV_MOUSE_MOVE = 3,  // 0x02 type
 		EV_MOUSE_LEFT_PRESS = 4,
 		EV_MOUSE_LEFT_RELEASE = 5,
 		EV_MOUSE_LEFT_HOLD = 6,
@@ -74,12 +74,19 @@ struct ControlMessage
 
 	uint8_t type;
 	uint16_t nEvents;
-	struct Event {
-		uint8_t eventName, eventValue; ///> Event name and value
-		Event(uint8_t ev_name, uint8_t ev_value) :
-			eventName(ev_name), eventValue(ev_value)
-		{}
+	
+	union Event {
+		// Type 0x01
+		struct KeyEvent {
+			uint8_t eventName, eventValue; ///> Event name and value
+		} keyEvent ;
+
+		// Type 0x02
+		struct MouseEvent {
+			uint16_t x, y; ///> X/Y axis
+		} mouseEvent;
 	};
+
 	std::vector<Event> eventList;
 
 	//ControlMessage();
@@ -90,6 +97,10 @@ struct ControlMessage
 
 	/// Deserializes string message to this object.
 	/// Used when receiving message.
+	/// @msg: Buffer containing raw bytes of message.
+	/// @len: Length of the whole UDP payload received from a client.
+	/// Returns the byte size of the parsed message out of
+	/// the whole @len sized chunk.
 	int deserialize(const uint8_t* msg, size_t len);
 };
 
