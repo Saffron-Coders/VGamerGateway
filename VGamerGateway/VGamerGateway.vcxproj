@@ -149,6 +149,7 @@
     <ClInclude Include="ControlMessage.h" />
     <ClInclude Include="InputProcessor.h" />
     <ClInclude Include="NetworkInputManager.h" />
+    <ClInclude Include="ScanCode.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

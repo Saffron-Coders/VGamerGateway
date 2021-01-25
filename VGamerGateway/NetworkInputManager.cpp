@@ -1,17 +1,19 @@
-#include <stdio.h>
+#include <cstdio>
+#include <algorithm>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
 
 #include "NetworkInputManager.h"
+#include "Utils.h"
 
 PCSTR NetworkInputManager::NET_IN_COMMAND_PORT = "15000";
 PCSTR NetworkInputManager::NET_IN_DISCOVER_PORT = "15010";
-int NetworkInputManager::m_RecvLen = 512;
+int NetworkInputManager::m_RecvLen = 1024;
 
 NetworkInputManager::NetworkInputManager() :
 	m_Initialized(false), m_RecvBuffer(nullptr),
-	m_InputDecoder(nullptr)
+	m_InputProcessor(nullptr)
 {
 	WSAData wsa_data;
 	int ret = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -20,15 +22,15 @@ NetworkInputManager::NetworkInputManager() :
 		return;
 	}
 	
-	m_RecvBuffer = new char[m_RecvLen];
+	m_RecvBuffer = new uint8_t[m_RecvLen];
 	if (!m_RecvBuffer) {
 		fprintf(stderr, "Error(-1): Buffer allocation failed.\n");
 		WSACleanup();
 		return;
 	}
 
-	m_InputDecoder = std::make_unique<InputProcessor>();
-	if (!m_InputDecoder) {
+	m_InputProcessor = std::make_unique<InputProcessor>();
+	if (!m_InputProcessor) {
 		fprintf(stderr, "Error(-1): Memory allocation failed.\n");
 		delete[] m_RecvBuffer;
 		WSACleanup();
@@ -40,8 +42,8 @@ NetworkInputManager::NetworkInputManager() :
 
 NetworkInputManager::~NetworkInputManager()
 {
-	if(m_InputDecoder)
-		m_InputDecoder.release();
+	if(m_InputProcessor)
+		m_InputProcessor.release();
 	if (m_RecvBuffer)
 		delete[] m_RecvBuffer;
 	WSACleanup();
@@ -114,20 +116,42 @@ int NetworkInputManager::start()
 
 	// Forever RECEIVE............... Unless crashed.
 
+	uint8_t* extracted_msg = NULL;
+	size_t extracted_msg_len = 0;
 	sockaddr sender_addr;
 	int sender_addr_len, ret1;
 	do {
 		printf("--*--\n");
 		fflush(stdout);
 		sender_addr_len = sizeof(sender_addr);
-		ret = recvfrom(cmd_sock, m_RecvBuffer, m_RecvLen, 0, (SOCKADDR*)&sender_addr, &sender_addr_len);
-		m_RecvBuffer[ret] = '\0';
+		ret = recvfrom(cmd_sock, (char*)m_RecvBuffer, m_RecvLen, 0, (SOCKADDR*)&sender_addr, &sender_addr_len);
+		//m_RecvBuffer[ret] = '\0';
+
 		if (ret > 0) {
-			printf("[C]> %s\t...(%d)\n", m_RecvBuffer, ret);
-			
-			// Decode command and sendKey()
-			if ( (ret1 = m_InputDecoder->process(m_RecvBuffer, ret)) < 0) {
-				fprintf(stderr, "Error(%d): Message decode failed.\n", ret1);
+			printf("[Debug] Received: ");
+			Utils::printHex(m_RecvBuffer, ret);
+			fflush(stdout);
+
+			uint8_t* start_ptr = (uint8_t*)m_RecvBuffer;
+			int bytes_left = ret, bytes_read = 0;
+			while (bytes_left > 0) {
+				
+				// Extract a single message from the full buffer.
+				//if (extractSingleMessage(start_ptr, bytes_left, &extracted_msg, extracted_msg_len) < 0)
+				//	break; // Discard all buffered message.
+
+				// Process command
+				if ((bytes_read = m_InputProcessor->process((const uint8_t*)start_ptr, bytes_left)) <= 0) {
+					fprintf(stderr, "Error(%d): Message decode failed.\n", bytes_read);
+					break; // Consider all remaining buffered content as invalid.
+				}
+				bytes_left -= bytes_read;
+				start_ptr += bytes_read;
+
+				// Currently process command.
+				printf("[C]> ");
+				Utils::printHex(start_ptr - bytes_read, bytes_read);
+				puts("");
 			}
 		}
 		else {
@@ -229,3 +253,23 @@ int NetworkInputManager::startDiscoverMode()
 }
 
 NetworkInputManager NetInMgr;
+
+int NetworkInputManager::extractSingleMessage(const uint8_t* buff, size_t len, uint8_t** extracted_msg, size_t& extracted_msg_len)
+{
+	if (!buff || (len <= 0))
+		return -1;
+
+	if ((buff[0] != ControlMessage::MessageType::MSG_TYPE_KEY) &&
+		(buff[0] != ControlMessage::MessageType::MSG_TYPE_MOUSE)) {
+		return -1;
+	}
+
+	for (int i = 0; i < len - 1; ++i) {
+		if ((buff[i] == 0xff) && (buff[i + 1] == 0xff)) {
+			*extracted_msg = (uint8_t*)buff;
+			extracted_msg_len = i + 2;
+			return 0;
+		}
+	}
+	return -1;
+}
